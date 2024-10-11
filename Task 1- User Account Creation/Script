@@ -1,0 +1,87 @@
+#!/bin/bash
+
+# Script to create 100 user accounts for new engineers at MyComp
+
+# Variables
+USER_PREFIX="mycompusr"
+HOME_DIR_PREFIX="/home/"
+GROUP="wheel"
+PASSWORD_EXPIRY_DAYS=30
+
+# Function to check if the user already exists
+user_exists() {
+    id "$1" &>/dev/null
+}
+
+# Loop to create 100 user accounts
+for i in {1..100}; do
+    USERNAME="${USER_PREFIX}${i}"
+    HOME_DIR="${HOME_DIR_PREFIX}${USERNAME}"
+    PASSWORD="${USERNAME}"
+
+    # Check if user already exists
+    if user_exists "$USERNAME"; then
+        echo "User $USERNAME already exists. Skipping..."
+        continue
+    fi
+
+    # Create user with home directory
+    useradd -m -d "$HOME_DIR" -s /bin/bash -G "$GROUP" "$USERNAME"
+    if [ $? -eq 0 ]; then
+        echo "User $USERNAME created successfully."
+    else
+        echo "Error creating user $USERNAME."
+        continue
+    fi
+
+    # Set the user's password
+    echo "$USERNAME:$PASSWORD" | chpasswd
+    if [ $? -eq 0 ]; then
+        echo "Password for $USERNAME set successfully."
+    else
+        echo "Error setting password for $USERNAME."
+    fi
+
+    # Set home directory permissions
+    chmod 700 "$HOME_DIR"
+    if [ $? -eq 0 ]; then
+        echo "Permissions for $HOME_DIR set to 700."
+    else
+        echo "Error setting permissions for $HOME_DIR."
+    fi
+
+    # Set password expiration
+    chage -M "$PASSWORD_EXPIRY_DAYS" "$USERNAME"
+    if [ $? -eq 0 ]; then
+        echo "Password for $USERNAME set to expire in $PASSWORD_EXPIRY_DAYS days."
+    else
+        echo "Error setting password expiration for $USERNAME."
+    fi
+done
+
+# Password expiration notification mechanism
+NOTIFY_SCRIPT="/etc/cron.daily/password_expiry_notify.sh"
+
+cat << 'EOF' > "$NOTIFY_SCRIPT"
+#!/bin/bash
+
+# Script to notify users of password expiration
+
+# Loop through all users
+for user in $(getent passwd | awk -F: '{ print $1 }'); do
+    # Get the number of days until password expiration
+    days_left=$(chage -l $user | grep "Password expires" | awk -F: '{ print $2 }' | awk '{ print $1 }')
+    
+    # Notify user if password expires in less than 7 days
+    if [ "$days_left" -lt 7 ]; then
+        echo "Hello $user, your password will expire in $days_left days. Please change it soon." | mail -s "Password Expiry Notification" $user
+    fi
+done
+EOF
+
+# Make the notification script executable
+chmod +x "$NOTIFY_SCRIPT"
+
+echo "Password expiration notification mechanism set up successfully."
+echo "User account creation script completed."
+
