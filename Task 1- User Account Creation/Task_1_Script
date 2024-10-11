@@ -69,6 +69,7 @@ cat << 'EOF' > "$NOTIFY_SCRIPT"
 
 # Loop through all users
 for user in $(getent passwd | awk -F: '{ print $1 }'); do
+
     # Get the number of days until password expiration
     days_left=$(chage -l $user | grep "Password expires" | awk -F: '{ print $2 }' | awk '{ print $1 }')
     
@@ -76,6 +77,7 @@ for user in $(getent passwd | awk -F: '{ print $1 }'); do
     if [ "$days_left" -lt 7 ]; then
         echo "Hello $user, your password will expire in $days_left days. Please change it soon." | mail -s "Password Expiry Notification" $user
     fi
+
 done
 EOF
 
