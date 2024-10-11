@@ -1,0 +1,57 @@
+#!/bin/bash
+
+# Script to monitor and restart services if necessary
+
+# Variables
+SERVICES=("httpd" "sshd")
+EMAIL=" secretchapshoorveer802@gmail.com"
+
+# Function to check if a service is running
+is_service_running() {
+    systemctl is-active --quiet $1
+}
+
+# Function to restart a service
+restart_service() {
+    sudo systemctl start $1
+}
+
+# Function to install httpd if not found
+install_httpd() {
+    echo "httpd service not found. Attempting to install..."
+    sudo yum install httpd -y
+    sudo systemctl start httpd
+    sudo systemctl enable httpd
+}
+
+# Loop through each service and check its status
+for SERVICE in "${SERVICES[@]}"; do
+
+    # Check if the service exists
+    if ! systemctl list-units --type=service --all | grep -q "$SERVICE"; then
+        if [ "$SERVICE" == "httpd" ]; then
+            install_httpd
+        else
+            echo "Service $SERVICE not found."
+            continue
+        fi
+    fi
+
+    # Check if the service is running
+    if is_service_running $SERVICE; then
+        echo "$SERVICE is running."
+    else
+        echo "$SERVICE is not running. Attempting to restart..."
+        restart_service $SERVICE
+
+        # Check if the service was restarted successfully
+        if is_service_running $SERVICE; then
+            echo "$SERVICE has been restarted successfully."
+
+            # Send notification email
+            echo -e "Subject: Service $SERVICE Restarted\n\nThe $SERVICE service was found stopped and has been restarted on $(hostname) at $(date)." | sendmail -v $EMAIL
+        else
+            echo "Failed to restart $SERVICE."
+        fi
+    fi
+done
