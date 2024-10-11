@@ -1,0 +1,54 @@
+#!/bin/bash
+
+# Set variables
+SERVICES=("httpd" "sshd")
+LOG_FILES=("/var/log/httpd/access_log" "/var/log/secure")
+RETENTION_DAYS=30
+EMAIL="secretchapshoorveer802@gmail.com"
+EMAIL_SUBJECT="Log Rotation Complete"
+EMAIL_BODY="/tmp/email_body.txt"
+
+# Rotate and compress logs
+for INDEX in "${!SERVICES[@]}"; do
+    SERVICE=${SERVICES[$INDEX]}
+    LOG_FILE=${LOG_FILES[$INDEX]}
+    
+    if [ -f "$LOG_FILE" ]; then
+        # Rotate and compress the log file
+        TIMESTAMP=$(date +'%Y%m%d%H%M%S')
+        COMPRESSED_FILE="$LOG_FILE.$TIMESTAMP.gz"
+        mv "$LOG_FILE" "$LOG_FILE.$TIMESTAMP"
+        gzip "$LOG_FILE.$TIMESTAMP"
+        touch "$LOG_FILE"
+        echo "Rotated and compressed log for $SERVICE."
+    else
+        echo "Log file for $SERVICE not found."
+    fi
+done
+
+# Remove old compressed logs older than retention period
+find "$LOG_DIR" -type f -name "*.log.*.gz" -mtime +$RETENTION_DAYS -exec rm -f {} 2>/dev/null \;
+echo "Old compressed logs older than $RETENTION_DAYS days have been removed."
+
+# Send notification email
+{
+    echo "The log rotation task has been completed successfully."
+    echo ""
+    echo "Logs for the following services have been rotated and compressed:"
+    for SERVICE in "${SERVICES[@]}"; do
+        echo "- $SERVICE"
+    done
+    echo ""
+    echo "Old compressed logs older than $RETENTION_DAYS days have been removed."
+} > "$EMAIL_BODY"
+
+# Send the email
+sendmail "$EMAIL" <<EOF
+Subject: $EMAIL_SUBJECT
+$(cat $EMAIL_BODY)
+EOF
+
+echo "Notification email sent to $EMAIL."
+
+# Prompt to indicate script is running
+echo "Log rotation script executed successfully."
