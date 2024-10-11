@@ -1,0 +1,77 @@
+#!/bin/bash
+
+# task9_system_info.sh
+# Script to display  system information
+
+# Exit immediately if a command exits with a non-zero status
+set -e
+
+# Function to display CPU information
+cpu_info() {
+  echo "CPU Information:"
+  if ! lscpu; then
+    echo "Error: Failed to retrieve CPU information."
+    exit 1
+  fi
+  echo ""
+}
+
+# Function to display memory information
+memory_info() {
+  echo "Memory Information:"
+  if ! free -h; then
+    echo "Error: Failed to retrieve memory information."
+    exit 1
+  fi
+  echo ""
+}
+
+# Function to display disk usage information
+disk_usage() {
+  echo "Disk Usage Information:"
+  if ! df -h; then
+    echo "Error: Failed to retrieve disk usage information."
+    exit 1
+  fi
+  echo ""
+}
+
+# Function to display network configuration
+network_info() {
+  echo "Network Configuration:"
+  if ! ip -o -4 addr show | awk '{print "Interface:", $2, "\nIP Address:", $4}'; then
+    echo "Error: Failed to retrieve network configuration."
+    exit 1
+  fi
+  echo ""
+  echo "MAC Addresses:"
+  if ! ip link show | awk '/ether/ {print "Interface:", $2, "\nMAC Address:", $2, "\n"}'; then
+    echo "Error: Failed to retrieve MAC addresses."
+    exit 1
+  fi
+  echo ""
+}
+
+# Function to display running processes
+running_processes() {
+  echo "Running Processes:"
+  if ! ps aux --sort=-%cpu,-%mem | head -n 10; then
+    echo "Error: Failed to retrieve running processes."
+    exit 1
+  fi
+  echo ""
+}
+
+# Main script execution
+echo "System Information Report"
+echo "========================="
+echo ""
+
+cpu_info
+memory_info
+disk_usage
+network_info
+running_processes
+
+echo "Report generated on: $(date)"
+echo "Script executed successfully."
