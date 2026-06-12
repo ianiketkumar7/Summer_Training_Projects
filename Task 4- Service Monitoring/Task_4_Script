@@ -4,7 +4,7 @@
 
 # Variables
 SERVICES=("httpd" "sshd")
-EMAIL=" secretchapshoorveer802@gmail.com"
+EMAIL=" JhonDoe@gmail.com"
 
 # Function to check if a service is running
 is_service_running() {
