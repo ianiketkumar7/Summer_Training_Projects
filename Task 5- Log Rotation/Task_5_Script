@@ -4,7 +4,7 @@
 SERVICES=("httpd" "sshd")
 LOG_FILES=("/var/log/httpd/access_log" "/var/log/secure")
 RETENTION_DAYS=30
-EMAIL="secretchapshoorveer802@gmail.com"
+EMAIL="JhonDoe@gmail.com"
 EMAIL_SUBJECT="Log Rotation Complete"
 EMAIL_BODY="/tmp/email_body.txt"
 
