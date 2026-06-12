@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define email recipient
-EMAIL_RECIPIENT="secretchapshoorveer802@gmail.com"
+EMAIL_RECIPIENT="JhonDoe@gmail.com"
 EMAIL_SUBJECT="Daily Disk Usage Report for MyComp Servers"
 EMAIL_BODY="Please find the attached disk usage report for all mounted filesystems on the server."
 
